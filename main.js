@@ -1,29 +1,41 @@
 const fs = require('fs');
 const path = require('path');
 
+const ATTRS = ['武力', '智力', '统帅', '速度'];
+const LEVELS = [5, 9, 10, 19, 20, 29, 30, 39, 40, 49, 50];
 
-const argv = process.argv;
-const args = checkArray(argv[2].split(';'));
+let heros = null;
+let configs = null;
+let userHeros = null;
+let userTechs = null;
 
-// const args = '于吉,左小慈,张角;null;统帅,速度'.split(';');
-// const args = '小号-关羽,小号-关妹,小号-张飞;null;速度'.split(';');
+const main = function () {
+    // const argv = process.argv;
+    const argv = 'node main.js 阿彩 于吉,左慈,张角 46 统帅,速度'.split(' ');
+    // console.log(argv);
 
-args[0] = args[0].split(',');
-args[1] = args[1] && args[1] !== 'null' ? args[1].split(',') : null;
-args[2] = args[2] && args[2] !== 'null' ? args[2].split(',') : null;
-args.forEach(arr => {
-    arr && checkArray(arr);
-});
+    const user = argv[2];
+    const args = [].slice.call(argv, 3);
 
-main(args[0], args[2], args[1]);
+    args.forEach((s, i) => {
+        args[i] = s && s !== 'null' ? s.split(',') : null;
+    });
+    console.log(args);
 
-function main(names, attrs, levels) {
-    attrs = attrs || ['武力', '智力', '统帅', '速度'];
-    levels = levels || [5, 9, 10, 19, 20, 29, 30, 39, 40, 49, 50];
+    init(user, args[0], args[2], args[1]);
+};
+
+function init(user, names, attrs, levels) {
+    attrs = attrs || ATTRS;
+    levels = levels || LEVELS;
 
     levels.forEach((v, i) => {
         levels[i] = +v;
     });
+
+    const heros = initHeros(user, names);
+    debugger;
+    const maxNameLen = getMaxLen(names);
 
     const l = checkNameLen(names);
     const k = checkKingdoms(names);
@@ -227,34 +239,68 @@ function special(name, attr) {
     return spec[attr] || 0;
 }
 
-function checkArray(arr) {
-    for (let i = arr.length - 1; i > -1; i--) {
-        if (arr[i]) {
+const getKingdoms = function (names) {
+    const kingdoms = [];
+};
+
+const getMaxLen = function (strs) {
+    let len = 0;
+
+    strs.forEach(str => {
+        if (len < str.length) {
+            len = str.length;
+        }
+    });
+
+    return len;
+};
+
+const initHeros = function (user, names) {
+    const heros = {};
+    const heroConfigs = JSON.parse(fs.readFileSync(path.join(__dirname, '武将.json')).toString('utf-8'));
+
+    names.forEach(name => {
+        const hero = JSON.parse(fs.readFileSync(path.join(__dirname, user, name + '.json')).toString('utf-8'));
+
+        let tamplate = null;
+        for (const fac in heroConfigs) {
+            const faction = heroConfigs[fac];
+
+            for (const key in faction) {
+                const tamplates = faction[key];
+
+                for (const k in tamplates) {
+                    if (k === name) {
+                        tamplate = tamplates[k];
+                        break;
+                    }
+                }
+
+                if (tamplate) {
+                    break;
+                }
+            }
+
+            if (tamplate) {
+                hero['阵营'] = fac;
+                break;
+            }
+        }
+        merge(hero, tamplate);
+
+        heros[name] = hero;
+    });
+
+    return heros;
+};
+
+const merge = function (dst, src) {
+    for (const key in src) {
+        if (dst.hasOwnProperty(key)) {
             continue;
         }
-        arr.splice(i, 1);
+        dst[key] = src[key];
     }
-    return arr;
-}
+};
 
-function trim(str) {
-    while (str.length > 0) {
-        const chr = str.chatAt(0);
-        if (chr === ' ' || chr === ' ' || chr === '\t') {
-            str = str.substring(1);
-        }
-        else {
-            break;
-        }
-    }
-    while (str.length > 0) {
-        const chr = str.chatAt(str.length - 1);
-        if (chr === ' ' || chr === ' ' || chr === '\t') {
-            str = str.substring(0, str.length - 1);
-        }
-        else {
-            break;
-        }
-    }
-    return str;
-}
+main();
