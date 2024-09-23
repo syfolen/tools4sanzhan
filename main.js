@@ -41,17 +41,17 @@ const main = function (user, army, names, attrs, levels) {
 
     levels.forEach(lv => {
         console.log(`等级: ${lv}`);
-        names.forEach(name => {
+        for (const name in heros) {
             let strs = [];
             attrs.forEach(attr => {
-                strs.push(`${make(name, heros[name], army, lv, attr, faction, maxNameLen)}`);
+                strs.push(`${make(heros[name], army, lv, attr, faction)}`);
             });
             console.log(`> ${toFixed(name, 0, maxNameLen, 'l', true)} { ${strs.join(', ')} }`);
-        });
+        }
     });
 };
 
-const make = function (name, hero, army, lv, attr, faction, nameLen) {
+const make = function (hero, army, lv, attr, faction) {
     let base = hero['基础'][attr] + hero['成长'][attr] * (lv - 1);
 
     const keys = Object.keys(hero['加点']);
@@ -131,22 +131,12 @@ const toFixed = function (v, decimals, digits, lr, cn) {
         str = str.substring(0, index + 3);
     }
 
-    while (str.length < digits) {
+    while (getStrLen(str) < digits) {
         if (lr === 'r') {
-            if (cn) {
-                str = '  ' + str;
-            }
-            else {
-                str = ' ' + str;
-            }
+            str = ' ' + str;
         }
         else {
-            if (cn) {
-                str = str + '  ';
-            }
-            else {
-                str = str + ' ';
-            }
+            str = str + ' ';
         }
     }
 
@@ -185,9 +175,22 @@ const checkOther = function (type, hero, attr) {
 
 const getMaxLenOfStrs = function (strs) {
     strs.sort((a, b) => {
-        return b.length - a.length;
+        return getStrLen(b) - getStrLen(a);
     });
-    return strs[0].length;
+    return getStrLen(strs[0]);
+};
+
+const getStrLen = function (str) {
+    let len = 0;
+    for (let i = 0; i < str.length; i++) {
+        if (str.charCodeAt(i) < 128) {
+            len++;
+        }
+        else {
+            len += 2;
+        }
+    }
+    return len;
 };
 
 const initFactions = function (heros) {
@@ -214,6 +217,14 @@ const initHeros = function (user, names) {
 
     names.forEach(name => {
         const hero = JSON.parse(fs.readFileSync(path.join(__dirname, user, name + '.json')).toString('utf-8'));
+        const index = name.indexOf('-');
+
+        let fac = null;
+        let alias = name;
+        if (index > -1) {
+            fac = name.substring(index + 1);
+            name = name.substring(0, index);
+        }
 
         let heroTemp = null;
         for (const faction in heroConfigs) {
@@ -228,14 +239,20 @@ const initHeros = function (user, names) {
                     break;
                 }
             }
+
             if (heroTemp) {
-                hero['阵营'] = faction;
+                if (fac) {
+                    hero['阵营'] = fac;
+                }
+                else {
+                    hero['阵营'] = faction;
+                }
                 break;
             }
         }
         merge(hero, heroTemp);
 
-        heros[name] = hero;
+        heros[alias] = hero;
     });
 
     return heros;
