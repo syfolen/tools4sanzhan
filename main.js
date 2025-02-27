@@ -8,9 +8,9 @@ let configs = null;
 let userTechs = null;
 
 const init = function () {
-    const argv = process.argv;
-    // const argv = 'node main.js 阿彩 盾 于吉,左慈,张角 46 统帅,速度'.split(' ');
-    // console.log(argv);
+    // const argv = process.argv;
+    const argv = 'node main.js 落晚霞 枪 张飞,关银屏,蔡文姬'.split(' ');
+    console.log(argv);
 
     const user = argv[2];
     const army = argv[3];
@@ -39,6 +39,7 @@ const main = function (user, army, names, attrs, levels) {
     const faction = initFactions(heros);
     const maxNameLen = getMaxLenOfStrs(names);
 
+    debugger
     levels.forEach(lv => {
         console.log(`等级: ${lv}`);
         for (const name in heros) {
@@ -215,6 +216,7 @@ const initHeros = function (user, names) {
     const heros = {};
     const heroConfigs = JSON.parse(fs.readFileSync(path.join(__dirname, '武将.json')).toString('utf-8'));
 
+    debugger
     names.forEach(name => {
         const hero = JSON.parse(fs.readFileSync(path.join(__dirname, user, name + '.json')).toString('utf-8'));
         const index = name.indexOf('-');

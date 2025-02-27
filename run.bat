@@ -6,8 +6,11 @@ echo 若没有安装 nodejs 请自行前往 https://nodejs.p2hp.com/ 下载
 echo 一般下载带 LTS 的稳定版就行了
 
 node -v
-node main.js 阿彩 盾 于吉,左慈,张角
+::node main.js 阿彩 盾 于吉,左慈,张角
+::node main.js 阿彩 枪 关银屏,张飞,关羽
+node main.js 落晚霞 枪 张飞,关银屏,蔡文姬
 ::node main.js 落晚霞 枪 SP诸葛亮,张苞,关兴
 ::node main.js 落晚霞 盾 于吉,左慈-魏,张角
+::node main.js 落晚霞 骑 孙尚香,凌统,周泰
 
 @pause
