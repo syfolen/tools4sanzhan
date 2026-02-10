@@ -1,16 +1,36 @@
 const fs = require('fs');
 const path = require('path');
 
+const Logger = function () {
+    this.logErr = true;
+    this.logWarn = false;
+};
+Logger.prototype.info = function () {
+    console.info.apply(null, [].slice.call(arguments));
+};
+Logger.prototype.warn = function () {
+    this.logWarn && console.info.apply(null, [].slice.call(arguments));
+};
+Logger.prototype.error = function () {
+    this.logErr && console.info.apply(null, [].slice.call(arguments));
+};
+
 const ATTRS = ['武力', '智力', '统帅', '速度'];
 const LEVELS = [5, 9, 10, 19, 20, 29, 30, 39, 40, 49, 50];
+
+const logger = new Logger();
 
 let configs = null;
 let userTechs = null;
 
 const init = function () {
     // const argv = process.argv;
-    const argv = 'node main.js 落晚霞 枪 张飞,关银屏,蔡文姬'.split(' ');
-    console.log(argv);
+    // const argv = 'node main.js 落晚霞 枪 SP诸葛亮,张苞,关兴'.split(' ');
+    // const argv = 'node main.js 落晚霞 枪 张飞,关银屏,黄月英'.split(' ');
+    // const argv = 'node main.js 阿彩 骑 SP荀彧,SP郭嘉,贾诩'.split(' ');
+    // const argv = 'node main.js 阿彩 骑 貂蝉,左慈,张角'.split(' ');
+    const argv = 'node main.js 落晚霞 弓 貂蝉,左慈,张角'.split(' ');
+    logger.info(argv);
 
     const user = argv[2];
     const army = argv[3];
@@ -19,7 +39,7 @@ const init = function () {
     args.forEach((s, i) => {
         args[i] = s && s !== 'null' ? s.split(',') : null;
     });
-    console.log(`${user} ${army} ${args[0]}`);
+    logger.info(`${user} ${army} ${args[0]}`);
 
     main(user, army, args[0], args[2], args[1]);
 };
@@ -39,15 +59,15 @@ const main = function (user, army, names, attrs, levels) {
     const faction = initFactions(heros);
     const maxNameLen = getMaxLenOfStrs(names);
 
-    debugger
+    // debugger
     levels.forEach(lv => {
-        console.log(`等级: ${lv}`);
+        logger.info(`等级: ${lv}`);
         for (const name in heros) {
             let strs = [];
             attrs.forEach(attr => {
                 strs.push(`${make(heros[name], army, lv, attr, faction)}`);
             });
-            console.log(`> ${toFixed(name, 0, maxNameLen, 'l', true)} { ${strs.join(', ')} }`);
+            logger.info(`> ${toFixed(name, 0, maxNameLen, 'l', true)} { ${strs.join(', ')} }`);
         }
     });
 };
@@ -103,6 +123,10 @@ const make = function (hero, army, lv, attr, faction) {
         for (const key in equips) {
             const item = equips[key];
             item['特技'] && item['特技'].length > 0 && item['特技'].split(',').forEach(spec => {
+                const reg0 = checkSpec(spec, attr);
+                if (isNaN(reg0)) {
+                    debugger;
+                }
                 num += checkSpec(spec, attr);
             });
         }
@@ -113,6 +137,11 @@ const make = function (hero, army, lv, attr, faction) {
     }
     num += checkOther('战法', hero, attr);
 
+    const s1 = toFixed(base, 2, 6, 'r');
+    const s2 = toFixed(num, 1, 6);
+    if (isNaN(s1) || isNaN(s2)) {
+        debugger;
+    }
     return `${attr}:${toFixed(base, 2, 6, 'r')} -> ${toFixed(num, 2, 6)}`;
 };
 
@@ -147,7 +176,7 @@ const toFixed = function (v, decimals, digits, lr, cn) {
 const checkSpec = function (name, attr) {
     const spec = configs['特技'][name];
     if (!spec) {
-        console.error(`忽略${name}对${attr}的加成`);
+        logger.warn(`忽略${name}对${attr}的加成`);
         return;
     }
 
@@ -216,7 +245,7 @@ const initHeros = function (user, names) {
     const heros = {};
     const heroConfigs = JSON.parse(fs.readFileSync(path.join(__dirname, '武将.json')).toString('utf-8'));
 
-    debugger
+    // debugger
     names.forEach(name => {
         const hero = JSON.parse(fs.readFileSync(path.join(__dirname, user, name + '.json')).toString('utf-8'));
         const index = name.indexOf('-');
